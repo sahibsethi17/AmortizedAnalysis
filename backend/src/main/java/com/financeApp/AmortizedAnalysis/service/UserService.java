@@ -9,6 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserService {
 
@@ -24,6 +26,31 @@ public class UserService {
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public Users signup(Users user) throws Exception {
+        return getUsers(user);
+    }
+
+    public String verify(Users user) {
+        Authentication auth = authManager
+                .authenticate(new UsernamePasswordAuthenticationToken(
+                        user.getUsername(), user.getPassword()));
+
+        if (auth.isAuthenticated()) {
+            return jwtService.generateToken(user.getUsername());
+        } else {
+            return "Fail";
+        }
+    }
+
+    public String deleteUser(Users user) throws Exception {
+        repo.delete(user);
+        return "Deleted Successfully.";
+    }
+
+    public Users updateUser(Users user) throws Exception {
+        return getUsers(user);
+    }
+
+    private Users getUsers(Users user) throws Exception {
         String userEmail = user.getEmail();
         String userUsername = user.getUsername();
         Users u1 = repo.findByEmail(userEmail);
@@ -41,15 +68,7 @@ public class UserService {
         }
     }
 
-    public String verify(Users user) {
-        Authentication auth = authManager
-                .authenticate(new UsernamePasswordAuthenticationToken(
-                        user.getUsername(), user.getPassword()));
-
-        if (auth.isAuthenticated()) {
-            return jwtService.generateToken(user.getUsername());
-        } else {
-            return "Fail";
-        }
+    public Optional<Users> getUserById(int userId) {
+        return repo.findById(userId);
     }
 }
