@@ -1,7 +1,13 @@
 package com.financeApp.AmortizedAnalysis.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.List;
+
+@Setter
+@Getter
 @Entity
 public class Users {
 
@@ -19,49 +25,41 @@ public class Users {
     private String email;
 
     @Column(nullable = false)
-    private String name;
+    private String firstName;
 
+    @Column(nullable = false)
+    private String lastName;
 
+    @Column(nullable = false)
+    private String phoneNumber;
 
-    public String getName() {
-        return name;
-    }
+    @Column(nullable = false)
+    private String currency = "CAD";
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    @Column(nullable = false)
+    private String dateOfBirth;
 
-    public String getEmail() {
-        return email;
-    }
+    @Column(nullable = false)
+    private String gender;
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
 
-    public int getId() {
-        return id;
-    }
+    @Column(nullable = false)
+    private boolean emailPreference = true;
 
-    public void setId(int id) {
-        this.id = id;
-    }
+    @Column(nullable = false)
+    private java.util.Date creationDate = new java.util.Date();
 
-    public String getPassword() {
-        return password;
-    }
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Transaction> transactions;
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    @Column(nullable = false)
+    private double monthlyBudget;
 
-    public String getUsername() {
-        return username;
-    }
+    @Column(nullable = false)
+    private Goal goal;
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     @Override
     public String toString() {
@@ -70,7 +68,8 @@ public class Users {
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", email='" + email + '\'' +
-                ", name='" + name + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
                 '}';
     }
 }
