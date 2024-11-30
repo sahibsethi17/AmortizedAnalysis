@@ -15,50 +15,50 @@ public class Users {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "firstname", nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "lastname", nullable = false)
     private String lastName;
 
-    @Column(nullable = false)
+    @Column(name = "phonenumber", nullable = false)
     private String phoneNumber;
 
-    @Column(nullable = false)
+    @Column(name = "currency", nullable = false)
     private String currency = "CAD";
 
-    @Column(nullable = false)
-    private String dateOfBirth;
+    @Column(name = "dateofbirth", nullable = false)
+    private java.util.Date dateOfBirth;
 
-    @Column(nullable = false)
+    @Column(name = "gender", nullable = false)
     private String gender;
 
-    @Column(nullable = false)
+    @Column(name = "role", nullable = false)
     private String role = "ROLE_USER";
 
-    @Column(nullable = false)
+    @Column(name = "emailpreference", nullable = false)
     private boolean emailPreference = true;
 
-    @Column(nullable = false)
+    @Column(name = "creationdate", nullable = false)
     private java.util.Date creationDate = new java.util.Date();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Transaction> transactions;
+    private List<Account> accounts;
 
-    @Column(nullable = false)
+    @Column(name = "monthlybudget")
     private double monthlyBudget;
 
-    @Column(nullable = false)
-    private Goal goal;
+    @Column(name = "yearlybudget")
+    private double yearlyBudget;
 
 
     @Override

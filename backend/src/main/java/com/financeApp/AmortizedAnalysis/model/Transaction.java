@@ -28,7 +28,7 @@ public class Transaction {
     private Date transactionDate;
 
     @ManyToOne
-    @JoinColumn(name = "id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false) // Updated column name
     private Users user;
 
 }

@@ -30,28 +30,23 @@ public class SecurityConfig {
     private JwtFilter jwtFilter;
 
     @Bean
-    public SecurityFilterChain securityFIlterChain(HttpSecurity http) throws Exception {
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless JWT
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("signup", "login")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults())
+                        .requestMatchers("/", "/api/users/signup", "/api/users/login").permitAll() // Public routes
+                        .anyRequest().authenticated()) // All other routes require authentication
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless session for JWT
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // Add JWT filter
                 .build();
-
-        //                 .formLogin(Customizer.withDefaults())
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
-        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(new BCryptPasswordEncoder(12)); // BCrypt with strength of 12
+        provider.setUserDetailsService(userDetailsService); // Use custom UserDetailsService
         return provider;
     }
 
@@ -59,5 +54,4 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 }
