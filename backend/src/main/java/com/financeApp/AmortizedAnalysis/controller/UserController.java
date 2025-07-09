@@ -77,10 +77,11 @@ public class UserController {
         }
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> delete(@RequestBody Users user) {
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> delete(@PathVariable Long id) {
         try {
-            String result = service.deleteUser(user);
+            System.out.println("IN USER CONTROLLER DELETE");
+            String result = service.deleteUser(id);
             return new ResponseEntity<>(result, HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

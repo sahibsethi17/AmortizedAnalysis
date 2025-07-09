@@ -45,7 +45,7 @@ public class Users {
     private String gender;
 
     @Column(name = "role", nullable = false)
-    private String role = "ROLE_USER";
+    private String role = "USER";
 
     @Column(name = "emailpreference", nullable = false)
     private boolean emailPreference = true;

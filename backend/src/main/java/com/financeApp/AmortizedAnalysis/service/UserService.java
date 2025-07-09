@@ -58,7 +58,15 @@ public class UserService {
         }
     }
 
-    public String deleteUser(Users user) throws Exception {
+    public String deleteUser(Long id) throws Exception {
+        Users user = repo.findById(id)
+                .orElseThrow(() -> new Exception("User not found"));
+
+        String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        if (!user.getUsername().equals(currentUsername)) {
+            throw new AccessDeniedException("You can only delete your own account.");
+        }
+
         repo.delete(user);
         return "Deleted Successfully.";
     }
