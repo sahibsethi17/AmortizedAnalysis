@@ -32,7 +32,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
 
         // Adjust this to match the actual paths being accessed
-        if (path.equals("/") || path.startsWith("/api/users/signup") || path.startsWith("/api/users/login")) {
+        if (path.equals("/") || path.startsWith("/api/users/signup") || path.startsWith("/api/users/login") || path.startsWith("/api/users/all")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -43,7 +43,10 @@ public class JwtFilter extends OncePerRequestFilter {
         String username = null;
         String email = null;
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+            return;
+        } else {
             token = authHeader.substring(7);
             username = jwtService.extractUsername(token);
             email = jwtService.extractEmail(token);
@@ -51,14 +54,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(username);
-            String expectedEmail;
-            try {
-                expectedEmail = context.getBean(MyUserDetailsService.class).loadUserByEmail(email);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
 
-            if (jwtService.validateToken(token, userDetails, expectedEmail)) {
+            if (jwtService.validateToken(token, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

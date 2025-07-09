@@ -1,16 +1,12 @@
 package com.financeApp.AmortizedAnalysis.controller;
 
 import com.financeApp.AmortizedAnalysis.model.Transaction;
-import com.financeApp.AmortizedAnalysis.model.Users;
 import com.financeApp.AmortizedAnalysis.service.TransactionService;
-import com.financeApp.AmortizedAnalysis.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -19,30 +15,43 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
-    @Autowired
-    private UserService usersService;
+    // Create a transaction
+    @PostMapping
+    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
+        Transaction createdTransaction = transactionService.createTransaction(transaction);
+        return ResponseEntity.ok(createdTransaction);
+    }
 
-    @PostMapping("/create/{userId}")
-    public ResponseEntity<Transaction> createTransaction(@PathVariable int userId, @RequestBody Transaction transaction) {
-        Optional<Users> user = usersService.getUserById(userId);
-        if (user.isPresent()) {
-            transaction.setUser(user.get());
-            return ResponseEntity.ok(transactionService.createTransaction(transaction));
+    // Get all transactions (optionally by accountId)
+    @GetMapping
+    public ResponseEntity<List<Transaction>> getTransactions(@RequestParam(value = "accountId", required = false) Long accountId) {
+        List<Transaction> transactions;
+        if (accountId != null) {
+            transactions = transactionService.getTransactionsByAccountId(accountId);
         } else {
-            return ResponseEntity.badRequest().build();
+            transactions = transactionService.getAllTransactions();
         }
+        return ResponseEntity.ok(transactions);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Transaction>> getTransactionsByUser(@PathVariable int userId) {
-        Optional<Users> user = usersService.getUserById(userId);
-        return user.map(value -> ResponseEntity.ok(transactionService.getTransactionsByUser(value)))
-                .orElse(ResponseEntity.notFound().build());
+    // Get a transaction by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Transaction> getTransactionById(@PathVariable Long id) {
+        Transaction transaction = transactionService.getTransactionById(id);
+        return ResponseEntity.ok(transaction);
     }
 
+    // Update a transaction
+    @PutMapping("/{id}")
+    public ResponseEntity<Transaction> updateTransaction(@PathVariable Long id, @RequestBody Transaction transactionDetails) {
+        Transaction updatedTransaction = transactionService.updateTransaction(id, transactionDetails);
+        return ResponseEntity.ok(updatedTransaction);
+    }
+
+    // Delete a transaction
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTransaction(@PathVariable UUID id) {
+    public ResponseEntity<String> deleteTransaction(@PathVariable Long id) {
         transactionService.deleteTransaction(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok("Transaction deleted successfully");
     }
 }

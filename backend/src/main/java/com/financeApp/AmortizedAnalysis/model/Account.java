@@ -41,7 +41,7 @@ public class Account {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @OneToMany
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Transaction> transactions;
 
     @PrePersist
@@ -55,7 +55,6 @@ public class Account {
         this.updatedAt = LocalDateTime.now();
     }
 
-    @ManyToOne
-    @JoinColumn(name = "goal_id", nullable = false)
-    private Goal goal;
+    @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Goal> goals;
 }

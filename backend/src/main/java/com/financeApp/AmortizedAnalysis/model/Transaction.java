@@ -11,11 +11,12 @@ import java.util.Date;
 @Setter
 @Getter
 @Entity
+@Table(name = "transactions")
 public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private Long id;
 
     @Column(nullable = false)
     private String category;
@@ -31,4 +32,7 @@ public class Transaction {
     @JoinColumn(name = "user_id", nullable = false) // Updated column name
     private Users user;
 
+    @ManyToOne
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 }

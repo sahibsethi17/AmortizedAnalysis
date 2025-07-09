@@ -29,8 +29,8 @@ public class Goal {
     private LocalDate deadline;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
 }
 

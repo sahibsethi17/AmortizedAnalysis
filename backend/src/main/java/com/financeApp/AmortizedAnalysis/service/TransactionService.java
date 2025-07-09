@@ -1,34 +1,46 @@
 package com.financeApp.AmortizedAnalysis.service;
 
 import com.financeApp.AmortizedAnalysis.model.Transaction;
-import com.financeApp.AmortizedAnalysis.model.Users;
 import com.financeApp.AmortizedAnalysis.repo.TransactionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class TransactionService {
 
     @Autowired
-    private TransactionRepo repo;
+    private TransactionRepo transactionRepository;
 
     public Transaction createTransaction(Transaction transaction) {
-        return repo.save(transaction);
+        return transactionRepository.save(transaction);
     }
 
-    public List<Transaction> getTransactionsByUser(Users user) {
-        return repo.findByUser(user);
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
     }
 
-    public Optional<Transaction> getTransactionById(UUID id) {
-        return repo.findById(id);
+    public List<Transaction> getTransactionsByAccountId(Long accountId) {
+        return transactionRepository.findByAccountId(accountId);
     }
 
-    public void deleteTransaction(UUID id) {
-        repo.deleteById(id);
+    public Transaction getTransactionById(Long id) {
+        return transactionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Transaction not found"));
+    }
+
+    public Transaction updateTransaction(Long id, Transaction transactionDetails) {
+        Transaction existingTransaction = getTransactionById(id);
+        // Update fields
+        existingTransaction.setAmount(transactionDetails.getAmount());
+        existingTransaction.setCategory(transactionDetails.getCategory());
+        existingTransaction.setAmount(transactionDetails.getAmount());
+        existingTransaction.setTransactionDate(transactionDetails.getTransactionDate());
+        return transactionRepository.save(existingTransaction);
+    }
+
+    public void deleteTransaction(Long id) {
+        transactionRepository.deleteById(id);
     }
 }

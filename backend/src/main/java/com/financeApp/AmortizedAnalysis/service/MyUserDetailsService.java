@@ -25,12 +25,12 @@ public class MyUserDetailsService implements UserDetailsService {
         return new UserPrincipal(user);
     }
 
-    public String loadUserByEmail(String email) throws Exception {
+    public UserDetails loadUserByEmail(String email) throws Exception {
         Users user = repo.findByEmail(email);
         if (user == null) {
             System.out.println("User not found");
             throw new Exception("User not found");
         }
-        return user.getEmail();
+        return new UserPrincipal(user);
     }
 }
