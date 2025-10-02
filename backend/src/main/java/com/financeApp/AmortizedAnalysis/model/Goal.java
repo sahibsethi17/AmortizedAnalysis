@@ -28,8 +28,9 @@ public class Goal {
     @Column(nullable = false)
     private LocalDate deadline;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonBackReference("account-goals")
     private Account account;
 
 }

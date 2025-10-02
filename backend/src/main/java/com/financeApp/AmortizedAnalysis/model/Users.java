@@ -1,8 +1,7 @@
 package com.financeApp.AmortizedAnalysis.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,6 +9,10 @@ import java.util.UUID;
 @Setter
 @Getter
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "users")
 public class Users {
 
@@ -54,6 +57,7 @@ public class Users {
     private java.util.Date creationDate = new java.util.Date();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference("user-accounts")
     private List<Account> accounts;
 
     @Column(name = "monthlybudget")

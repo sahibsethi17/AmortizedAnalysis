@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Setter
+@Getter
 @Entity
 @Data
 @NoArgsConstructor
@@ -19,15 +21,16 @@ public class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonBackReference("user-accounts")
     private Users user;
 
     @Column(nullable = false)
     private String accountName;
 
     @Column(nullable = false)
-    private String accountType; // e.g., "Checking", "Savings", "Credit Card", "Investment"
+    private String accountType; // e.g., "Chequing", "Savings", "Credit Card", "Investment"
 
     @Column(nullable = false)
     private BigDecimal balance;
@@ -42,6 +45,7 @@ public class Account {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference("account-transactions")
     private List<Transaction> transactions;
 
     @PrePersist
@@ -56,5 +60,6 @@ public class Account {
     }
 
     @OneToMany(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true)
+    @com.fasterxml.jackson.annotation.JsonManagedReference("account-goals")
     private List<Goal> goals;
 }

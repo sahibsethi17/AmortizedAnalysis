@@ -1,8 +1,8 @@
 package com.financeApp.AmortizedAnalysis.service;
 
+import com.financeApp.AmortizedAnalysis.dto.user.UpdateUserRequest;
 import com.financeApp.AmortizedAnalysis.model.UserPrincipal;
 import com.financeApp.AmortizedAnalysis.model.Users;
-import com.financeApp.AmortizedAnalysis.model.UpdateUserRequest;
 import com.financeApp.AmortizedAnalysis.repo.UserRepo;
 import com.financeApp.AmortizedAnalysis.utils.AuthResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +12,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public class UserService {
@@ -75,47 +75,82 @@ public class UserService {
 //        return getUsers(user);
 //    }
 
-    public Users updateUser(Long id, UpdateUserRequest update) throws Exception {
-        String jwtUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+    @Transactional
+    public Users updateUser(Long id, UpdateUserRequest req) throws Exception {
+        String caller = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        System.out.println("Caller: " + caller);
 
         Users existing = repo.findById(id)
                 .orElseThrow(() -> new Exception("User not found"));
 
-        if (!existing.getUsername().equals(jwtUsername)) {
+        System.out.println(existing);
+
+        if (!caller.equals(existing.getUsername()) && !hasRole("ADMIN")) {
             throw new AccessDeniedException("You can only update your own account.");
         }
 
-        if (update.getEmail() != null && !update.getEmail().equals(existing.getEmail())) {
-            if (repo.findByEmail(update.getEmail()) != null) {
-                throw new Exception("Email already in use.");
-            }
-            existing.setEmail(update.getEmail());
-        }
+        System.out.println("Here");
 
-        if (update.getUsername() != null && !update.getUsername().equals(existing.getUsername())) {
-            if (repo.findByUsername(update.getUsername()) != null) {
+        // username (optional; see JWT note below)
+        if (req.username() != null) {
+            String newUsername = req.username().trim();
+            if (!newUsername.equals(existing.getUsername())
+                    && repo.existsByUsernameAndIdNot(newUsername, id)) {
                 throw new Exception("Username already in use.");
             }
-            existing.setUsername(update.getUsername());
+            existing.setUsername(newUsername);
         }
 
-        if (update.getPassword() != null) {
-            existing.setPassword(encoder.encode(update.getPassword()));
+        System.out.println("Here2");
+
+        // email
+        if (req.email() != null) {
+            String newEmail = req.email().trim();
+            if (!newEmail.equalsIgnoreCase(existing.getEmail())
+                    && repo.existsByEmailAndIdNot(newEmail, id)) {
+                throw new Exception("Email already in use.");
+            }
+            existing.setEmail(newEmail);
         }
 
-        if (update.getFirstName() != null) existing.setFirstName(update.getFirstName());
-        if (update.getLastName() != null) existing.setLastName(update.getLastName());
-        if (update.getPhoneNumber() != null) existing.setPhoneNumber(update.getPhoneNumber());
-        if (update.getCurrency() != null) existing.setCurrency(update.getCurrency());
-        if (update.getDateOfBirth() != null) existing.setDateOfBirth(update.getDateOfBirth());
-        if (update.getGender() != null) existing.setGender(update.getGender());
-        if (update.getRole() != null) existing.setRole(update.getRole());
-        if (update.getEmailPreference() != null) existing.setEmailPreference(update.getEmailPreference());
-        if (update.getCreationDate() != null) existing.setCreationDate(update.getCreationDate());
-        if (update.getMonthlyBudget() != null) existing.setMonthlyBudget(update.getMonthlyBudget());
-        if (update.getYearlyBudget() != null) existing.setYearlyBudget(update.getYearlyBudget());
+        System.out.println("Here3");
 
+        // password
+        if (req.password() != null && !req.password().isBlank()) {
+            existing.setPassword(encoder.encode(req.password()));
+        }
+
+        System.out.println(existing);
+
+        if (req.firstName() != null)      existing.setFirstName(req.firstName());
+        if (req.lastName() != null)       existing.setLastName(req.lastName());
+        if (req.phoneNumber() != null)    existing.setPhoneNumber(req.phoneNumber());
+        if (req.currency() != null)       existing.setCurrency(req.currency());
+        if (req.gender() != null)         existing.setGender(req.gender());
+        if (req.emailPreference() != null)existing.setEmailPreference(req.emailPreference());
+        if (req.monthlyBudget() != null)  existing.setMonthlyBudget(req.monthlyBudget());
+        if (req.yearlyBudget() != null)   existing.setYearlyBudget(req.yearlyBudget());
+
+        System.out.println(existing);
+
+        // If your DTO uses LocalDate for DOB:
+        if (req.dateOfBirth() != null) {
+            // convert LocalDate -> java.util.Date (if your entity still uses Date)
+            var dob = java.util.Date.from(
+                    req.dateOfBirth().atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+            );
+            existing.setDateOfBirth(dob);
+        }
+
+        // IMPORTANT: do NOT set role or creationDate from request.
         return repo.save(existing);
+    }
+
+    private boolean hasRole(String role) {
+        return SecurityContextHolder.getContext().getAuthentication()
+                .getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
     }
 
     private Users getUsers(Users user) throws Exception {

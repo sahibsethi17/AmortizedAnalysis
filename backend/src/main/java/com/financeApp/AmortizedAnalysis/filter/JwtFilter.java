@@ -27,42 +27,55 @@ public class JwtFilter extends OncePerRequestFilter {
     ApplicationContext context;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // skip CORS preflight
+        return "OPTIONS".equalsIgnoreCase(request.getMethod());
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+
         String path = request.getRequestURI();
-
-        // Adjust this to match the actual paths being accessed
-        if (path.equals("/") || path.startsWith("/api/users/signup") || path.startsWith("/api/users/login") || path.startsWith("/api/users/all")) {
-            filterChain.doFilter(request, response);
+        // Public endpoints
+        if (path.startsWith("/api/users/signup") || path.startsWith("/api/users/login") || path.startsWith("/api/users/all")) {
+            chain.doFilter(request, response);
             return;
         }
 
-        // Extract and validate JWT
         String authHeader = request.getHeader("Authorization");
-        String token = null;
-        String username = null;
-        String email = null;
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+            // No token → let Spring Security handle (will be 401 on protected routes)
+            chain.doFilter(request, response);
             return;
-        } else {
-            token = authHeader.substring(7);
-            username = jwtService.extractUsername(token);
-            email = jwtService.extractEmail(token);
         }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = context.getBean(MyUserDetailsService.class).loadUserByUsername(username);
+        String token = authHeader.substring(7);
+        String username = null;
+        try {
+            username = jwtService.extractUsername(token);
+        } catch (Exception e) {
+            // Bad token → let Security handle
+            chain.doFilter(request, response);
+            return;
+        }
+
+        var context = SecurityContextHolder.getContext();
+        var currentAuth = context.getAuthentication();
+
+        if (username != null && (currentAuth == null || !currentAuth.isAuthenticated()
+                || currentAuth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
+
+            var userDetails = this.context.getBean(com.financeApp.AmortizedAnalysis.service.MyUserDetailsService.class)
+                    .loadUserByUsername(username);
 
             if (jwtService.validateToken(token, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                var authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                context.setAuthentication(authToken);
             }
         }
 
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }

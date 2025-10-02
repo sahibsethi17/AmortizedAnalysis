@@ -1,16 +1,18 @@
 package com.financeApp.AmortizedAnalysis.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.UUID;
+import java.time.LocalDate;
 import java.util.Date;
 
 
-@Setter
-@Getter
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "transactions")
 public class Transaction {
 
@@ -26,13 +28,16 @@ public class Transaction {
 
     @Column(nullable = false)
     @Temporal(TemporalType.TIMESTAMP)
+    @JsonFormat(pattern = "yyyy-MM-dd-HH-mm-ss")
     private Date transactionDate;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false) // Updated column name
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonBackReference("user-transactions")
     private Users user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "account_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonBackReference("account-transactions")
     private Account account;
 }

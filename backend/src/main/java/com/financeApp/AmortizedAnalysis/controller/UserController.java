@@ -1,18 +1,18 @@
 package com.financeApp.AmortizedAnalysis.controller;
 
-import com.financeApp.AmortizedAnalysis.model.UpdateUserRequest;
+import com.financeApp.AmortizedAnalysis.dto.user.UpdateUserRequest;
 import com.financeApp.AmortizedAnalysis.model.Users;
 import com.financeApp.AmortizedAnalysis.service.UserService;
 import com.financeApp.AmortizedAnalysis.utils.AuthResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -64,6 +64,16 @@ public class UserController {
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Optional<Users>> getUser(@PathVariable Long id) {
+        try {
+            Optional<Users> user = service.getUserById(id);
+            return new ResponseEntity<>(user, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 
