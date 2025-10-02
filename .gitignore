@@ -35,4 +35,4 @@ build/
 /backend/src/main/resources/application.properties
 
 .env
-/backend/.aws
+/backend/.aws/
